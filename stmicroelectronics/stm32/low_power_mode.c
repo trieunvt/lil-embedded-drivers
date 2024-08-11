@@ -1,41 +1,38 @@
 /**
- * @author:  trieunvt
- * @file:    LowPowerRunMode.c
- * @date:    31 Jul 2024
- * @version: v1.0.1
- * @brief:   HOW TO USE
- *           1. Call configIWDGInLowPowerRunMode() to config the Independent Watchdog Timer (IWDG).
- *              E.g.: configIWDGInLowPowerRunMode(LPRM_IWDG_FREEZE);
- *           2. Call enterLowPowerRunMode() wherever to acess Low Power Run Mode.
+ * @file:   low_power_mode.c
+ * @author: trieunvt
+ * @brief:  Low Power Mode (LPM) module driver.
+ *          USAGE
+ *          1. Call LPM_InitIWDG() to config the Independent Watchdog Timer (IWDG).
+ *          2. Call LPM_Enter() wherever to acess Low Power Mode.
  **/
 
 #include "main.h"
 #include "stdint.h"
 
-#define DEBUG_MODE
-#define LPRM_IWDG_FREEZE 0x00
-#define LPRM_IWDG_RUN    0x01
+#define LPM_IWDG_FREEZE 0x00
+#define LPM_IWDG_RUN    0x01
 
-void configIWDGInLowPowerRunMode(uint16_t option){
+void LPM_InitIWDG(uint16_t option) {
     /* Get the old OB configuration to reconfigure */
     FLASH_OBProgramInitTypeDef pOBConfig = {0};
     HAL_FLASHEx_OBGetConfig(&pOBConfig);
 
-    switch (option){
-    case LPRM_IWDG_FREEZE:
-        if ((pOBConfig.USERConfig & OB_IWDG_STOP_RUN) != 0){
+    switch (option) {
+    case LPM_IWDG_FREEZE:
+        if ((pOBConfig.USERConfig & OB_IWDG_STOP_RUN) != 0) {
             /* Reconfigure the OB */
             pOBConfig.OptionType = OPTIONBYTE_USER;
-            pOBConfig.USERType   = OB_USER_IWDG_STOP;
+            pOBConfig.USERType = OB_USER_IWDG_STOP;
             pOBConfig.USERConfig = OB_IWDG_STOP_FREEZE;
         }
         break;
 
-    case LPRM_IWDG_RUN:
-        if ((pOBConfig.USERConfig & OB_IWDG_STOP_RUN) == 0){
+    case LPM_IWDG_RUN:
+        if ((pOBConfig.USERConfig & OB_IWDG_STOP_RUN) == 0) {
             /* Reconfigure the OB */
             pOBConfig.OptionType = OPTIONBYTE_USER;
-            pOBConfig.USERType   = OB_USER_IWDG_STOP;
+            pOBConfig.USERType = OB_USER_IWDG_STOP;
             pOBConfig.USERConfig = OB_IWDG_STOP_RUN;
         }
         break;
@@ -65,47 +62,48 @@ void configIWDGInLowPowerRunMode(uint16_t option){
     HAL_NVIC_SystemReset();
 }
 
-void reconfigSystemClock(void){
-    /* Configure the LSE Drive Capability */
+void LPM_ReconfigSystemClock(void) {
+    /* Configure the LSE drive capability */
     HAL_PWR_EnableBkUpAccess();
     __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 
-    /* Initialize RCC Oscillators according to
+    /* Initialize RCC oscillators according to
     specified parameters in the RCC_OscInitTypeDef structure */
-    RCC_OscInitTypeDef RCC_OscInitStruct  = {0};
-    RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_LSE | RCC_OSCILLATORTYPE_MSI;
-    RCC_OscInitStruct.LSEState            = RCC_LSE_ON;
-    RCC_OscInitStruct.MSIState            = RCC_MSI_ON;
+    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE | RCC_OSCILLATORTYPE_MSI;
+    RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+    RCC_OscInitStruct.MSIState = RCC_MSI_ON;
     RCC_OscInitStruct.MSICalibrationValue = 0;
-    RCC_OscInitStruct.MSIClockRange       = RCC_MSIRANGE_0;
-    RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_NONE;
+    RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_0;
+    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
 
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK){
+    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
         Error_Handler();
     }
 
     /* Initialize CPU, AHB and APB buses clocks */
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-    RCC_ClkInitStruct.ClockType          = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-    RCC_ClkInitStruct.SYSCLKSource       = RCC_SYSCLKSOURCE_MSI;
-    RCC_ClkInitStruct.AHBCLKDivider      = RCC_SYSCLK_DIV1;
-    RCC_ClkInitStruct.APB1CLKDivider     = RCC_HCLK_DIV1;
-    RCC_ClkInitStruct.APB2CLKDivider     = RCC_HCLK_DIV1;
+    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
+                                | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
+    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK){
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK) {
         Error_Handler();
     }
 
     /* Configure the main internal regulator output voltage */
-    if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK){
+    if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK) {
         Error_Handler();
     }
 
-    /* Enable the MSI Auto Calibration */
+    /* Enable the MSI auto calibration */
     HAL_RCCEx_EnableMSIPLLMode();
 }
 
-void enterLowPowerRunMode(void){
+void LPM_Enter(void) {
     osDelay(100);
 
     /* Disable the register clock of all GPIOs */
@@ -115,13 +113,13 @@ void enterLowPowerRunMode(void){
     __HAL_RCC_GPIOH_CLK_DISABLE();
 
     /* Reconfigure the System Clock to 100KHz */
-    reconfigSystemClock();
+    LPM_ReconfigSystemClock();
 
-    /* Enter Low Power Run Mode (LPRM) */
+    /* Enter Low Power Mode (LPM) */
     HAL_PWREx_EnableLowPowerRunMode();
 
-    /* Wait until the system and the regulator are in Low Power Run Mode */
-    while (__HAL_PWR_GET_FLAG(PWR_FLAG_REGLPF) == RESET){
+    /* Wait until the system and the regulator are in Low Power Mode */
+    while (__HAL_PWR_GET_FLAG(PWR_FLAG_REGLPF) == RESET) {
         osDelay(1);
     }
 
@@ -144,7 +142,7 @@ void enterLowPowerRunMode(void){
     /* Enable tick interrupt used by HAL */
     HAL_ResumeTick();
 
-    /* Exit Low Power Run Mode (LPRM) */
+    /* Exit Low Power Mode (LPM) */
     HAL_PWREx_DisableLowPowerRunMode();
 
     /* Enable register clocks of all GPIOs */
