@@ -2,6 +2,12 @@
 
 These little embedded system drivers were developed on practical work experience.
 
+## [Nordic Semiconductor](./nordic-semiconductor/)
+
+### [nRF51](./nordic-semiconductor/nrf51/)
+
+-   [Unix Time](./nordic-semiconductor/nrf51/unix-time/)
+
 ## [STMicroelectronics](./stmicroelectronics/)
 
 ### [STM32](./stmicroelectronics/stm32/)
