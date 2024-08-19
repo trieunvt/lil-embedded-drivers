@@ -13,3 +13,4 @@ These little embedded system drivers were developed on practical work experience
 ### [STM32](./stmicroelectronics/stm32/)
 
 -   [Low Power Mode](./stmicroelectronics/stm32/low_power_mode.c)
+-   [STSPIN220: Stepper Motor Driver](./stmicroelectronics/stm32/stspin220/)
