@@ -12,5 +12,6 @@ These little embedded system drivers were developed on practical work experience
 
 ### [STM32](./stmicroelectronics/stm32/)
 
+-   [DRV8210DSGR: Brushed DC Motor Driver](./stmicroelectronics/stm32/drv8210dsgr/)
 -   [Low Power Mode](./stmicroelectronics/stm32/low_power_mode.c)
 -   [STSPIN220: Stepper Motor Driver](./stmicroelectronics/stm32/stspin220/)
